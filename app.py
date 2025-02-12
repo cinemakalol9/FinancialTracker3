@@ -195,46 +195,50 @@ if symbol:
                 st.markdown(f'<div class="level-item" style="color: green;">R{i}: ₹{pivot_points[f"Resistance {i}"]}</div>', unsafe_allow_html=True)
             st.markdown('</div></div>', unsafe_allow_html=True)
 
-        # Display TradingView chart
+        # Display Interactive Price Chart
         st.subheader("Price Chart with Technical Indicators")
-        tradingview_symbol = get_tradingview_symbol(symbol)
+        
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+        
+        # Create figure with secondary y-axis
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
+                          vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-        # TradingView Widget with improved configuration
-        st.markdown(f"""
-        <div class="tradingview-widget-container">
-            <div class="chart-container">
-                <div id="tradingview_chart" style="height: 100%;"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                <script type="text/javascript">
-                new TradingView.widget({{
-                    "width": "100%",
-                    "height": "100%",
-                    "symbol": "{tradingview_symbol}",
-                    "interval": "D",
-                    "timezone": "Asia/Kolkata",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "in",
-                    "toolbar_bg": "#1e222d",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "hide_side_toolbar": false,
-                    "allow_symbol_change": true,
-                    "container_id": "tradingview_chart",
-                    "studies": [
-                        "Supertrend@tv-basicstudies"
-                    ],
-                    "overrides": {{
-                        "mainSeriesProperties.candleStyle.upColor": "#26a69a",
-                        "mainSeriesProperties.candleStyle.downColor": "#ef5350",
-                        "mainSeriesProperties.candleStyle.wickUpColor": "#26a69a",
-                        "mainSeriesProperties.candleStyle.wickDownColor": "#ef5350"
-                    }}
-                }});
-                </script>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Add candlestick
+        fig.add_trace(go.Candlestick(x=hist.index,
+                                    open=hist['Open'],
+                                    high=hist['High'],
+                                    low=hist['Low'],
+                                    close=hist['Close'],
+                                    name='OHLC'),
+                     row=1, col=1)
+
+        # Add Moving average to price chart
+        ma20 = hist['Close'].rolling(window=20).mean()
+        fig.add_trace(go.Scatter(x=hist.index, y=ma20,
+                                line=dict(color='orange', width=2),
+                                name='MA20'),
+                     row=1, col=1)
+
+        # Add Volume chart
+        colors = ['red' if row['Open'] > row['Close'] else 'green' for index, row in hist.iterrows()]
+        fig.add_trace(go.Bar(x=hist.index, y=hist['Volume'],
+                            marker_color=colors,
+                            name='Volume'),
+                     row=2, col=1)
+
+        # Update layout
+        fig.update_layout(
+            xaxis_rangeslider_visible=False,
+            height=800,
+            template='plotly_dark',
+            title=f"{symbol.replace('.NS', '')} Stock Price Chart",
+            yaxis_title="Price (₹)",
+            yaxis2_title="Volume"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
         # Historical data table
         st.subheader(f"Historical Data - {symbol.replace('.NS', '')}")
