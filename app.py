@@ -42,13 +42,39 @@ st.markdown("""
         background-color: white;
         border-radius: 5px;
     }
+
+    .title {
+        font-family: 'Arial Black', sans-serif;
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #1E3D59;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .price-display {
+        font-size: 1.8em;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+
+    .level-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 5px 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # Title with Angel One logo
 col1, col2 = st.columns([3, 1])
 with col1:
-    st.title("📊 NSE Stock Data")
+    st.markdown('<div class="title">📊 NSE Stock Data Analysis</div>', unsafe_allow_html=True)
 with col2:
     st.image("assets/app-icon.svg", width=200)
 
@@ -83,34 +109,50 @@ if symbol:
     if error:
         st.error(f"Error fetching data: {error}")
     elif hist is not None:
+        # Get current price
+        current_price = hist.iloc[-1]['Close']
+
+        # Display current price and symbol
+        st.markdown(f"""
+        <div class="price-display">
+            {symbol.replace('.NS', '')} - Current Price: ₹{current_price:.2f}
+        </div>
+        """, unsafe_allow_html=True)
+
         # Calculate and display pivot points
         pivot_points = calculate_pivot_points(hist)
-        st.markdown("<h3 style='margin-bottom: 20px;'>Below Support and Resistance levels Just for Intraday</h3>", unsafe_allow_html=True)
-        
+        st.markdown("<h3 style='margin-bottom: 20px; text-align: center;'>Support and Resistance levels for Intraday Trading</h3>", unsafe_allow_html=True)
+
         # Display resistance levels in ascending order
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
+            st.markdown('<div class="level-box">', unsafe_allow_html=True)
             st.markdown("### Support Levels")
             for i in range(1, 5):
-                st.markdown(f"<span style='color: red'>S{i}: ₹{pivot_points[f'Support {i}']}</span>", unsafe_allow_html=True)
-                
+                st.markdown(f"<div style='color: red; margin: 5px 0;'>S{i}: ₹{pivot_points[f'Support {i}']}</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
         with col2:
+            st.markdown('<div class="level-box">', unsafe_allow_html=True)
             st.markdown("### Turning Price")
-            st.markdown(f"<span style='color: orange; font-weight: bold; font-size: 24px'>₹{pivot_points['Pivot Point']}</span>", unsafe_allow_html=True)
-            
+            st.markdown(f"<div style='color: orange; font-weight: bold; font-size: 24px; text-align: center;'>₹{pivot_points['Pivot Point']}</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
         with col3:
+            st.markdown('<div class="level-box">', unsafe_allow_html=True)
             st.markdown("### Resistance Levels")
             for i in range(1, 5):
-                st.markdown(f"<span style='color: green'>R{i}: ₹{pivot_points[f'Resistance {i}']}</span>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: green; margin: 5px 0;'>R{i}: ₹{pivot_points[f'Resistance {i}']}</div>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # Candlestick chart
         st.subheader("Price Chart (Candlestick)")
         import plotly.graph_objects as go
-        
+
         # Create dataframe for charts
         df = format_table_data(hist)
-        
+
         fig = go.Figure(data=[go.Candlestick(
             x=df.index,
             open=df['Open'],
@@ -119,7 +161,7 @@ if symbol:
             close=df['Close'],
             name='OHLC'
         )])
-        
+
         fig.update_layout(
             title=f"{symbol.replace('.NS', '')} Stock Price",
             yaxis_title="Price (₹)",
@@ -127,24 +169,24 @@ if symbol:
             template="plotly_dark",
             xaxis_rangeslider_visible=False
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
 
         # Enhanced Volume Chart
         st.subheader("Trading Volume")
         fig_volume = go.Figure()
-        
+
         # Color volume bars based on price movement
-        colors = ['red' if close < open else 'green' 
+        colors = ['red' if close < open else 'green'
                  for close, open in zip(df['Close'], df['Open'])]
-        
+
         fig_volume.add_trace(go.Bar(
             x=df.index,
             y=df['Volume'],
             name='Volume',
             marker_color=colors
         ))
-        
+
         # Add 20-day moving average of volume
         fig_volume.add_trace(go.Scatter(
             x=df.index,
@@ -152,14 +194,14 @@ if symbol:
             name='20-day MA',
             line=dict(color='orange', width=2)
         ))
-        
+
         fig_volume.update_layout(
             template="plotly_dark",
             xaxis_title="Date",
             yaxis_title="Volume",
             showlegend=True
         )
-        
+
         st.plotly_chart(fig_volume, use_container_width=True)
 
         # Historical data table
