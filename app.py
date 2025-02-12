@@ -220,6 +220,12 @@ if symbol:
                                 line=dict(color='orange', width=2),
                                 name='MA20'),
                      row=1, col=1)
+                     
+        # Add Supertrend
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['supertrend'],
+                                line=dict(color='purple', width=2),
+                                name='Supertrend'),
+                     row=1, col=1)
 
         # Add Volume chart
         colors = ['red' if row['Open'] > row['Close'] else 'green' for index, row in hist.iterrows()]

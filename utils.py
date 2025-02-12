@@ -66,6 +66,33 @@ def calculate_indicators(df):
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
 
+    # Supertrend (10,3)
+    period = 10
+    multiplier = 3
+
+    hl2 = (df['High'] + df['Low']) / 2
+    df['atr'] = df['High'] - df['Low']
+    df['atr'] = df['atr'].rolling(period).mean()
+
+    # Basic Upper and Lower Bands
+    df['basic_ub'] = hl2 + (multiplier * df['atr'])
+    df['basic_lb'] = hl2 - (multiplier * df['atr'])
+
+    # Final Upper and Lower Bands
+    df['final_ub'] = 0.00
+    df['final_lb'] = 0.00
+    for i in range(period, len(df)):
+        df['final_ub'].iat[i] = df['basic_ub'].iat[i] if df['basic_ub'].iat[i] < df['final_ub'].iat[i - 1] or df['Close'].iat[i - 1] > df['final_ub'].iat[i - 1] else df['final_ub'].iat[i - 1]
+        df['final_lb'].iat[i] = df['basic_lb'].iat[i] if df['basic_lb'].iat[i] > df['final_lb'].iat[i - 1] or df['Close'].iat[i - 1] < df['final_lb'].iat[i - 1] else df['final_lb'].iat[i - 1]
+
+    # Supertrend
+    df['supertrend'] = 0.00
+    for i in range(period, len(df)):
+        if df['Close'].iat[i] <= df['final_ub'].iat[i]:
+            df['supertrend'].iat[i] = df['final_ub'].iat[i]
+        else:
+            df['supertrend'].iat[i] = df['final_lb'].iat[i]
+
     return df
 
 def calculate_pivot_points(hist):
