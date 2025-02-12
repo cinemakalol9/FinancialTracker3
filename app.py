@@ -151,6 +151,8 @@ if symbol:
     # Add a loading spinner
     with st.spinner(f'Fetching data for {symbol}...'):
         hist, info, error = get_stock_data(symbol, period)
+        if hist is not None:
+            hist = calculate_indicators(hist)  # Calculate all indicators including supertrend
 
     if error:
         st.error(f"Error fetching data: {error}")
