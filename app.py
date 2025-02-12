@@ -67,6 +67,38 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
         margin: 5px 0;
+        height: 100%;  /* Make all boxes same height */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .level-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .turning-price {
+        color: orange;
+        font-weight: bold;
+        font-size: 28px;
+        text-align: center;
+        margin: 15px 0;
+    }
+
+    .level-item {
+        padding: 5px 0;
+        text-align: center;
+        font-size: 16px;
+        margin: 2px 0;
+    }
+
+    .level-title {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -128,23 +160,26 @@ if symbol:
 
         with col1:
             st.markdown('<div class="level-box">', unsafe_allow_html=True)
-            st.markdown("### Support Levels")
+            st.markdown('<div class="level-title">Support Levels</div>', unsafe_allow_html=True)
+            st.markdown('<div class="level-content">', unsafe_allow_html=True)
             for i in range(1, 5):
-                st.markdown(f"<div style='color: red; margin: 5px 0;'>S{i}: ₹{pivot_points[f'Support {i}']}</div>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="level-item" style="color: red;">S{i}: ₹{pivot_points[f"Support {i}"]}</div>', unsafe_allow_html=True)
+            st.markdown('</div></div>', unsafe_allow_html=True)
 
         with col2:
             st.markdown('<div class="level-box">', unsafe_allow_html=True)
-            st.markdown("### Turning Price")
-            st.markdown(f"<div style='color: orange; font-weight: bold; font-size: 24px; text-align: center;'>₹{pivot_points['Pivot Point']}</div>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('<div class="level-title">Turning Price</div>', unsafe_allow_html=True)
+            st.markdown('<div class="level-content">', unsafe_allow_html=True)
+            st.markdown(f'<div class="turning-price">₹{pivot_points["Pivot Point"]}</div>', unsafe_allow_html=True)
+            st.markdown('</div></div>', unsafe_allow_html=True)
 
         with col3:
             st.markdown('<div class="level-box">', unsafe_allow_html=True)
-            st.markdown("### Resistance Levels")
+            st.markdown('<div class="level-title">Resistance Levels</div>', unsafe_allow_html=True)
+            st.markdown('<div class="level-content">', unsafe_allow_html=True)
             for i in range(1, 5):
-                st.markdown(f"<div style='color: green; margin: 5px 0;'>R{i}: ₹{pivot_points[f'Resistance {i}']}</div>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="level-item" style="color: green;">R{i}: ₹{pivot_points[f"Resistance {i}"]}</div>', unsafe_allow_html=True)
+            st.markdown('</div></div>', unsafe_allow_html=True)
 
         # Candlestick chart
         st.subheader("Price Chart (Candlestick)")
