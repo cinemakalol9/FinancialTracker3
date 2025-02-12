@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils import get_stock_data, format_table_data, calculate_pivot_points, get_yahoo_finance_chart_url
-import trafilatura
+from utils import get_stock_data, format_table_data, calculate_pivot_points, get_tradingview_symbol
 
 # Page configuration
 st.set_page_config(
@@ -68,7 +67,7 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
         margin: 5px 0;
-        height: 100%;  /* Make all boxes same height */
+        height: 100%;
         display: flex;
         flex-direction: column;
     }
@@ -102,23 +101,17 @@ st.markdown("""
         font-weight: bold;
     }
 
-    .chart-container {
+    .tradingview-widget-container {
         background: white;
         padding: 20px;
         border-radius: 10px;
         margin: 20px 0;
         height: 600px;
     }
-
-    iframe {
-        border: none;
-        width: 100%;
-        height: 100%;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# Title with Angel One logo
+# Title with logo
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown('<div class="title">📊 NSE Stock Data Analysis</div>', unsafe_allow_html=True)
@@ -138,7 +131,6 @@ st.markdown("""
 col1, col2 = st.columns([2, 1])
 with col1:
     raw_symbol = st.text_input("Stock Symbol (e.g., RELIANCE, TCS, INFY)", "").upper()
-    # Add .NS suffix if not present
     symbol = f"{raw_symbol}.NS" if raw_symbol and not raw_symbol.endswith('.NS') else raw_symbol
 
 with col2:
@@ -171,7 +163,6 @@ if symbol:
         pivot_points = calculate_pivot_points(hist)
         st.markdown("<h3 style='margin-bottom: 20px; text-align: center;'>Support and Resistance levels for Intraday Trading</h3>", unsafe_allow_html=True)
 
-        # Display resistance levels in ascending order
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -197,12 +188,38 @@ if symbol:
                 st.markdown(f'<div class="level-item" style="color: green;">R{i}: ₹{pivot_points[f"Resistance {i}"]}</div>', unsafe_allow_html=True)
             st.markdown('</div></div>', unsafe_allow_html=True)
 
-        # Display Yahoo Finance chart
+        # Display TradingView chart
         st.subheader("Price Chart with Technical Indicators")
-        yahoo_chart_url = get_yahoo_finance_chart_url(symbol, period)
+        tradingview_symbol = get_tradingview_symbol(symbol)
+
+        # TradingView Widget
         st.markdown(f"""
-        <div class="chart-container">
-            <iframe src="{yahoo_chart_url}"></iframe>
+        <div class="tradingview-widget-container">
+            <!-- TradingView Widget BEGIN -->
+            <div class="tradingview-widget-container">
+                <div id="tradingview_chart"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                <script type="text/javascript">
+                new TradingView.widget({{
+                    "autosize": true,
+                    "symbol": "{tradingview_symbol}",
+                    "interval": "D",
+                    "timezone": "Asia/Kolkata",
+                    "theme": "light",
+                    "style": "1",
+                    "locale": "in",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "studies": [
+                        "Supertrend@tv-basicstudies"
+                    ],
+                    "container_id": "tradingview_chart"
+                }});
+                </script>
+            </div>
+            <!-- TradingView Widget END -->
         </div>
         """, unsafe_allow_html=True)
 

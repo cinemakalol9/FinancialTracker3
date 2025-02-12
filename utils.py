@@ -39,53 +39,20 @@ def get_nse_symbols():
 
 def get_stock_data(symbol, period='1y'):
     """
-    Fetch stock data and chart from Yahoo Finance
+    Fetch stock data from Yahoo Finance
     """
     try:
         # Fetch from Yahoo Finance
         stock = yf.Ticker(symbol)
         hist = stock.history(period=period)
         info = stock.info
-
         return hist, info, None
-
     except Exception as e:
         return None, None, str(e)
 
-def get_yahoo_finance_chart_url(symbol, range='1y'):
-    """Get Yahoo Finance chart URL"""
-    base_url = "https://finance.yahoo.com/chart/"
-    return f"{base_url}{symbol}?range={range}"
-
-def calculate_supertrend(df, period=10, multiplier=3):
-    """Calculate Supertrend indicator"""
-    hl2 = (df['High'] + df['Low']) / 2
-    atr = df['High'].sub(df['Low']).rolling(window=period).mean()
-
-    # Calculate Basic Upper and Lower Bands
-    basic_ub = hl2 + (multiplier * atr)
-    basic_lb = hl2 - (multiplier * atr)
-
-    # Initialize Final Upper and Lower Bands
-    final_ub = [0] * len(df)
-    final_lb = [0] * len(df)
-    supertrend = [0] * len(df)
-
-    for i in range(period, len(df)):
-        final_ub[i] = basic_ub[i] if (
-            basic_ub[i] < final_ub[i-1] or df['Close'][i-1] > final_ub[i-1]
-        ) else final_ub[i-1]
-
-        final_lb[i] = basic_lb[i] if (
-            basic_lb[i] > final_lb[i-1] or df['Close'][i-1] < final_lb[i-1]
-        ) else final_lb[i-1]
-
-        supertrend[i] = final_ub[i] if supertrend[i-1] == final_ub[i-1] and df['Close'][i] <= final_ub[i] else \
-                        final_lb[i] if supertrend[i-1] == final_ub[i-1] and df['Close'][i] > final_ub[i] else \
-                        final_lb[i] if supertrend[i-1] == final_lb[i-1] and df['Close'][i] >= final_lb[i] else \
-                        final_ub[i] if supertrend[i-1] == final_lb[i-1] and df['Close'][i] < final_lb[i] else 0
-
-    return pd.Series(supertrend, index=df.index)
+def get_tradingview_symbol(symbol):
+    """Convert Yahoo Finance symbol to TradingView format"""
+    return f"NSE:{symbol.replace('.NS', '')}"
 
 def calculate_indicators(df):
     """Calculate technical indicators"""
@@ -98,9 +65,6 @@ def calculate_indicators(df):
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
-
-    # Supertrend
-    df['Supertrend'] = calculate_supertrend(df)
 
     return df
 
