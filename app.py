@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils import get_stock_data, format_table_data, calculate_pivot_points, get_tradingview_symbol
+from utils import get_stock_data, format_table_data, calculate_pivot_points, get_tradingview_symbol, calculate_indicators
 
 # Page configuration
 st.set_page_config(
