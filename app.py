@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from utils import get_stock_data, format_table_data, calculate_pivot_points
+from utils import get_stock_data, format_table_data, calculate_pivot_points, get_yahoo_finance_chart_url
+import trafilatura
 
 # Page configuration
 st.set_page_config(
@@ -100,6 +101,20 @@ st.markdown("""
         font-size: 1.2em;
         font-weight: bold;
     }
+
+    .chart-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        height: 600px;
+    }
+
+    iframe {
+        border: none;
+        width: 100%;
+        height: 100%;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -136,18 +151,19 @@ with col2:
 if symbol:
     # Add a loading spinner
     with st.spinner(f'Fetching data for {symbol}...'):
-        hist, _, error = get_stock_data(symbol, period)
+        hist, info, error = get_stock_data(symbol, period)
 
     if error:
         st.error(f"Error fetching data: {error}")
-    elif hist is not None:
-        # Get current price
+    elif hist is not None and info is not None:
+        # Get current price and info
         current_price = hist.iloc[-1]['Close']
+        market_price = info.get('regularMarketPrice', current_price)
 
         # Display current price and symbol
         st.markdown(f"""
         <div class="price-display">
-            {symbol.replace('.NS', '')} - Current Price: ₹{current_price:.2f}
+            {symbol.replace('.NS', '')} - Current Price: ₹{market_price:.2f}
         </div>
         """, unsafe_allow_html=True)
 
@@ -181,101 +197,14 @@ if symbol:
                 st.markdown(f'<div class="level-item" style="color: green;">R{i}: ₹{pivot_points[f"Resistance {i}"]}</div>', unsafe_allow_html=True)
             st.markdown('</div></div>', unsafe_allow_html=True)
 
-        # Candlestick chart
-        st.subheader("Price Chart (Candlestick)")
-        import plotly.graph_objects as go
-
-        # Create dataframe for charts
-        df = format_table_data(hist)
-
-        fig = go.Figure(data=[go.Candlestick(
-            x=df.index,
-            open=df['Open'],
-            high=df['High'],
-            low=df['Low'],
-            close=df['Close'],
-            name='OHLC'
-        )])
-
-        # Add Supertrend
-        fig.add_trace(go.Scatter(
-            x=df.index,
-            y=df['Supertrend'],
-            mode='lines',
-            name='Supertrend',
-            line=dict(color='purple', width=2)
-        ))
-
-        # Improve chart layout
-        fig.update_layout(
-            title=f"{symbol.replace('.NS', '')} Stock Price",
-            yaxis_title="Price (₹)",
-            xaxis_title="Date",
-            template="plotly_dark",
-            xaxis_rangeslider_visible=False,
-            height=600,  # Increase chart height
-            margin=dict(t=30, r=30, b=30, l=30),  # Add margins
-            legend=dict(
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01,
-                bgcolor="rgba(255, 255, 255, 0.1)"
-            ),
-            # Improve date axis formatting
-            xaxis=dict(
-                rangeslider=dict(visible=False),
-                type="date",
-                tickformat="%Y-%m-%d",
-                tickmode="auto",
-                nticks=20,  # Adjust number of date labels
-                tickangle=-45,  # Angle the date labels
-                showgrid=True,
-                gridcolor="rgba(255, 255, 255, 0.1)"
-            ),
-            # Improve price axis formatting
-            yaxis=dict(
-                showgrid=True,
-                gridcolor="rgba(255, 255, 255, 0.1)",
-                zeroline=False
-            ),
-            plot_bgcolor="rgba(0,0,0,0)",  # Transparent background
-            paper_bgcolor="rgba(0,0,0,0)"
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Enhanced Volume Chart
-        st.subheader("Trading Volume")
-        fig_volume = go.Figure()
-
-        # Color volume bars based on price movement
-        colors = ['red' if close < open else 'green'
-                 for close, open in zip(df['Close'], df['Open'])]
-
-        fig_volume.add_trace(go.Bar(
-            x=df.index,
-            y=df['Volume'],
-            name='Volume',
-            marker_color=colors
-        ))
-
-        # Add 20-day moving average of volume
-        fig_volume.add_trace(go.Scatter(
-            x=df.index,
-            y=df['Volume'].rolling(window=20).mean(),
-            name='20-day MA',
-            line=dict(color='orange', width=2)
-        ))
-
-        fig_volume.update_layout(
-            template="plotly_dark",
-            xaxis_title="Date",
-            yaxis_title="Volume",
-            showlegend=True
-        )
-
-        st.plotly_chart(fig_volume, use_container_width=True)
+        # Display Yahoo Finance chart
+        st.subheader("Price Chart with Technical Indicators")
+        yahoo_chart_url = get_yahoo_finance_chart_url(symbol, period)
+        st.markdown(f"""
+        <div class="chart-container">
+            <iframe src="{yahoo_chart_url}"></iframe>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Historical data table
         st.subheader(f"Historical Data - {symbol.replace('.NS', '')}")

@@ -39,16 +39,23 @@ def get_nse_symbols():
 
 def get_stock_data(symbol, period='1y'):
     """
-    Fetch stock data from Yahoo Finance
+    Fetch stock data and chart from Yahoo Finance
     """
     try:
         # Fetch from Yahoo Finance
         stock = yf.Ticker(symbol)
         hist = stock.history(period=period)
-        return hist, None, None
+        info = stock.info
+
+        return hist, info, None
 
     except Exception as e:
         return None, None, str(e)
+
+def get_yahoo_finance_chart_url(symbol, range='1y'):
+    """Get Yahoo Finance chart URL"""
+    base_url = "https://finance.yahoo.com/chart/"
+    return f"{base_url}{symbol}?range={range}"
 
 def calculate_supertrend(df, period=10, multiplier=3):
     """Calculate Supertrend indicator"""
@@ -81,7 +88,7 @@ def calculate_supertrend(df, period=10, multiplier=3):
     return pd.Series(supertrend, index=df.index)
 
 def calculate_indicators(df):
-    """Calculate basic technical indicators"""
+    """Calculate technical indicators"""
     # 20-day Moving Average
     df['MA20'] = df['Close'].rolling(window=20).mean()
 
