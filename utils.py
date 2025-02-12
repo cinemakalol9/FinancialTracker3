@@ -1,5 +1,6 @@
 import yfinance as yf
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from database import get_session, StockPrice, StockInfo, init_db
 from sqlalchemy import and_
@@ -45,22 +46,62 @@ def get_stock_data(symbol, period='1y'):
         stock = yf.Ticker(symbol)
         hist = stock.history(period=period)
         return hist, None, None
-        
+
     except Exception as e:
         return None, None, str(e)
+
+def calculate_ema(data, period=200):
+    """Calculate Exponential Moving Average"""
+    return data['Close'].ewm(span=period, adjust=False).mean()
+
+def calculate_supertrend(df, period=10, multiplier=3):
+    """Calculate Supertrend indicator"""
+    hl2 = (df['High'] + df['Low']) / 2
+    atr = df['High'].sub(df['Low']).rolling(window=period).mean()
+
+    # Calculate Basic Upper and Lower Bands
+    basic_ub = hl2 + (multiplier * atr)
+    basic_lb = hl2 - (multiplier * atr)
+
+    # Initialize Final Upper and Lower Bands
+    final_ub = [0] * len(df)
+    final_lb = [0] * len(df)
+    supertrend = [0] * len(df)
+
+    for i in range(period, len(df)):
+        final_ub[i] = basic_ub[i] if (
+            basic_ub[i] < final_ub[i-1] or df['Close'][i-1] > final_ub[i-1]
+        ) else final_ub[i-1]
+
+        final_lb[i] = basic_lb[i] if (
+            basic_lb[i] > final_lb[i-1] or df['Close'][i-1] < final_lb[i-1]
+        ) else final_lb[i-1]
+
+        supertrend[i] = final_ub[i] if supertrend[i-1] == final_ub[i-1] and df['Close'][i] <= final_ub[i] else \
+                        final_lb[i] if supertrend[i-1] == final_ub[i-1] and df['Close'][i] > final_ub[i] else \
+                        final_lb[i] if supertrend[i-1] == final_lb[i-1] and df['Close'][i] >= final_lb[i] else \
+                        final_ub[i] if supertrend[i-1] == final_lb[i-1] and df['Close'][i] < final_lb[i] else 0
+
+    return pd.Series(supertrend, index=df.index)
 
 def calculate_indicators(df):
     """Calculate basic technical indicators"""
     # 20-day Moving Average
     df['MA20'] = df['Close'].rolling(window=20).mean()
-    
+
     # Relative Strength Index (14-day)
     delta = df['Close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
-    
+
+    # EMA 200
+    df['EMA200'] = calculate_ema(df, 200)
+
+    # Supertrend
+    df['Supertrend'] = calculate_supertrend(df)
+
     return df
 
 def calculate_pivot_points(hist):
@@ -69,19 +110,19 @@ def calculate_pivot_points(hist):
     high = latest['High']
     low = latest['Low']
     close = latest['Close']
-    
+
     pivot = (high + low + close) / 3
-    
+
     r1 = (2 * pivot) - low
     r2 = pivot + (high - low)
     r3 = high + 2 * (pivot - low)
     r4 = r3 + (high - low)
-    
+
     s1 = (2 * pivot) - high
     s2 = pivot - (high - low)
     s3 = low - 2 * (high - pivot)
     s4 = s3 - (high - low)
-    
+
     return {
         'Pivot Point': round(pivot, 2),
         'Resistance 1': round(r1, 2),

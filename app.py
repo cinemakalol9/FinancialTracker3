@@ -197,12 +197,37 @@ if symbol:
             name='OHLC'
         )])
 
+        # Add EMA 200
+        fig.add_trace(go.Scatter(
+            x=df.index,
+            y=df['EMA200'],
+            mode='lines',
+            name='EMA 200',
+            line=dict(color='blue', width=1)
+        ))
+
+        # Add Supertrend
+        fig.add_trace(go.Scatter(
+            x=df.index,
+            y=df['Supertrend'],
+            mode='lines',
+            name='Supertrend',
+            line=dict(color='purple', width=1)
+        ))
+
         fig.update_layout(
             title=f"{symbol.replace('.NS', '')} Stock Price",
             yaxis_title="Price (₹)",
             xaxis_title="Date",
             template="plotly_dark",
-            xaxis_rangeslider_visible=False
+            xaxis_rangeslider_visible=False,
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+                bgcolor="rgba(255, 255, 255, 0.1)"
+            )
         )
 
         st.plotly_chart(fig, use_container_width=True)
