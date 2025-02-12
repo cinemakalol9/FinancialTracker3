@@ -102,11 +102,18 @@ st.markdown("""
     }
 
     .tradingview-widget-container {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
         margin: 20px 0;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #1e222d;
+        padding: 0;
         height: 600px;
+    }
+
+    .chart-container {
+        width: 100%;
+        height: 100%;
+        min-height: 600px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -192,34 +199,40 @@ if symbol:
         st.subheader("Price Chart with Technical Indicators")
         tradingview_symbol = get_tradingview_symbol(symbol)
 
-        # TradingView Widget
+        # TradingView Widget with improved configuration
         st.markdown(f"""
         <div class="tradingview-widget-container">
-            <!-- TradingView Widget BEGIN -->
-            <div class="tradingview-widget-container">
-                <div id="tradingview_chart"></div>
+            <div class="chart-container">
+                <div id="tradingview_chart" style="height: 100%;"></div>
                 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
                 <script type="text/javascript">
                 new TradingView.widget({{
-                    "autosize": true,
+                    "width": "100%",
+                    "height": "100%",
                     "symbol": "{tradingview_symbol}",
                     "interval": "D",
                     "timezone": "Asia/Kolkata",
-                    "theme": "light",
+                    "theme": "dark",
                     "style": "1",
                     "locale": "in",
-                    "toolbar_bg": "#f1f3f6",
+                    "toolbar_bg": "#1e222d",
                     "enable_publishing": false,
+                    "hide_top_toolbar": false,
                     "hide_side_toolbar": false,
                     "allow_symbol_change": true,
+                    "container_id": "tradingview_chart",
                     "studies": [
                         "Supertrend@tv-basicstudies"
                     ],
-                    "container_id": "tradingview_chart"
+                    "overrides": {{
+                        "mainSeriesProperties.candleStyle.upColor": "#26a69a",
+                        "mainSeriesProperties.candleStyle.downColor": "#ef5350",
+                        "mainSeriesProperties.candleStyle.wickUpColor": "#26a69a",
+                        "mainSeriesProperties.candleStyle.wickDownColor": "#ef5350"
+                    }}
                 }});
                 </script>
             </div>
-            <!-- TradingView Widget END -->
         </div>
         """, unsafe_allow_html=True)
 
