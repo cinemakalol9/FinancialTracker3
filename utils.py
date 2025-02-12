@@ -50,10 +50,6 @@ def get_stock_data(symbol, period='1y'):
     except Exception as e:
         return None, None, str(e)
 
-def calculate_ema(data, period=200):
-    """Calculate Exponential Moving Average"""
-    return data['Close'].ewm(span=period, adjust=False).mean()
-
 def calculate_supertrend(df, period=10, multiplier=3):
     """Calculate Supertrend indicator"""
     hl2 = (df['High'] + df['Low']) / 2
@@ -95,9 +91,6 @@ def calculate_indicators(df):
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
-
-    # EMA 200
-    df['EMA200'] = calculate_ema(df, 200)
 
     # Supertrend
     df['Supertrend'] = calculate_supertrend(df)

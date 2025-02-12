@@ -197,37 +197,50 @@ if symbol:
             name='OHLC'
         )])
 
-        # Add EMA 200
-        fig.add_trace(go.Scatter(
-            x=df.index,
-            y=df['EMA200'],
-            mode='lines',
-            name='EMA 200',
-            line=dict(color='blue', width=1)
-        ))
-
         # Add Supertrend
         fig.add_trace(go.Scatter(
             x=df.index,
             y=df['Supertrend'],
             mode='lines',
             name='Supertrend',
-            line=dict(color='purple', width=1)
+            line=dict(color='purple', width=2)
         ))
 
+        # Improve chart layout
         fig.update_layout(
             title=f"{symbol.replace('.NS', '')} Stock Price",
             yaxis_title="Price (₹)",
             xaxis_title="Date",
             template="plotly_dark",
             xaxis_rangeslider_visible=False,
+            height=600,  # Increase chart height
+            margin=dict(t=30, r=30, b=30, l=30),  # Add margins
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
                 bgcolor="rgba(255, 255, 255, 0.1)"
-            )
+            ),
+            # Improve date axis formatting
+            xaxis=dict(
+                rangeslider=dict(visible=False),
+                type="date",
+                tickformat="%Y-%m-%d",
+                tickmode="auto",
+                nticks=20,  # Adjust number of date labels
+                tickangle=-45,  # Angle the date labels
+                showgrid=True,
+                gridcolor="rgba(255, 255, 255, 0.1)"
+            ),
+            # Improve price axis formatting
+            yaxis=dict(
+                showgrid=True,
+                gridcolor="rgba(255, 255, 255, 0.1)",
+                zeroline=False
+            ),
+            plot_bgcolor="rgba(0,0,0,0)",  # Transparent background
+            paper_bgcolor="rgba(0,0,0,0)"
         )
 
         st.plotly_chart(fig, use_container_width=True)
