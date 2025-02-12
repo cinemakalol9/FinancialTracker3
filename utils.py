@@ -70,9 +70,15 @@ def calculate_indicators(df):
     period = 10
     multiplier = 3
 
+    # Calculate True Range
+    df['tr0'] = abs(df['High'] - df['Low'])
+    df['tr1'] = abs(df['High'] - df['Close'].shift(1))
+    df['tr2'] = abs(df['Low'] - df['Close'].shift(1))
+    df['tr'] = df[['tr0', 'tr1', 'tr2']].max(axis=1)
+    df['atr'] = df['tr'].rolling(period).mean()
+
+    # Calculate basic bands
     hl2 = (df['High'] + df['Low']) / 2
-    df['atr'] = df['High'] - df['Low']
-    df['atr'] = df['atr'].rolling(period).mean()
 
     # Basic Upper and Lower Bands
     df['basic_ub'] = hl2 + (multiplier * df['atr'])
