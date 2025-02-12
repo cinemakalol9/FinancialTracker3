@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect x="0" y="0" width="100" height="100" fill="#2C3E50" rx="10"/>
+    
+    <!-- Candlestick Chart -->
+    <g stroke="#ECF0F1" stroke-width="2" fill="none">
+        <!-- Candlesticks -->
+        <line x1="20" y1="30" x2="20" y2="70"/>
+        <rect x="15" y="35" width="10" height="20" fill="#2ECC71"/>
+        
+        <line x1="40" y1="20" x2="40" y2="80"/>
+        <rect x="35" y="50" width="10" height="20" fill="#E74C3C"/>
+        
+        <line x1="60" y1="25" x2="60" y2="75"/>
+        <rect x="55" y="30" width="10" height="30" fill="#2ECC71"/>
+        
+        <line x1="80" y1="15" x2="80" y2="85"/>
+        <rect x="75" y="20" width="10" height="40" fill="#2ECC71"/>
+    </g>
+    
+    <!-- Trend Line -->
+    <path d="M10,65 Q30,55 50,45 T90,35" 
+          stroke="#3498DB" 
+          stroke-width="2" 
+          fill="none"/>
+</svg>
